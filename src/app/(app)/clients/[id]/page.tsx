@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { ClientForm } from "@/components/ClientForm";
 import { CouleurPicker } from "@/components/CouleurPicker";
 import { updateClient } from "@/lib/actions/clients";
@@ -25,6 +26,8 @@ export default async function EditClientPage({
 
   return (
     <div className="item-color space-y-6" style={styleCouleur("vert", client.couleur, client.id)}>
+      <Breadcrumbs lastLabel={client.nom} />
+
       <div className="flex items-center gap-4 border-l-4 border-l-(--item-color) pl-4">
         <Pastille texte={client.nom} taille="lg" />
         <h1 className="text-2xl font-semibold text-neutral-900">{client.nom}</h1>

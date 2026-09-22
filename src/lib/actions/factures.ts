@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/current-user";
 import { factureSchema, paiementSchema } from "@/lib/validations/document";
 import { calculerLigne, calculerTotaux } from "@/lib/calculs";
 import { nextDocumentNumber } from "@/lib/numbering";
+import { withToast } from "@/lib/toastRedirect";
 import { nouvelleCouleur } from "@/lib/couleurs-serveur";
 
 function parseFormData(formData: FormData) {
@@ -76,7 +77,56 @@ export async function createFacture(formData: FormData) {
   });
 
   revalidatePath("/factures");
-  redirect(`/factures/${facture.id}`);
+  redirect(withToast(`/factures/${facture.id}`, "Facture creee avec succes."));
+}
+
+export async function duplicateFacture(id: string) {
+  const user = await requireUser();
+
+  const source = await prisma.facture.findUniqueOrThrow({
+    where: { id },
+    include: { lignes: true },
+  });
+
+  const annee = new Date().getFullYear();
+  const numero = await nextDocumentNumber("FACTURE", annee);
+
+  const copie = await prisma.$transaction(async (tx) => {
+    const couleur = await nouvelleCouleur(tx, "facture", numero);
+    return tx.facture.create({
+      data: {
+        couleur,
+        numero,
+        annee,
+        dateEmission: new Date(),
+        dateEcheance: source.dateEcheance,
+        conditionsPaiement: source.conditionsPaiement,
+        notes: source.notes,
+        clientId: source.clientId,
+        createdById: user.id,
+        sousTotalHT: source.sousTotalHT,
+        totalTva: source.totalTva,
+        timbreFiscal: source.timbreFiscal,
+        totalTTC: source.totalTTC,
+        lignes: {
+          create: source.lignes.map((l) => ({
+            ordre: l.ordre,
+            designation: l.designation,
+            description: l.description,
+            quantite: l.quantite,
+            prixUnitaireHT: l.prixUnitaireHT,
+            remisePct: l.remisePct,
+            tauxTva: l.tauxTva,
+            totalHT: l.totalHT,
+            produitId: l.produitId,
+          })),
+        },
+      },
+    });
+  });
+
+  revalidatePath("/factures");
+  return { id: copie.id };
 }
 
 export async function updateFactureStatut(
@@ -140,4 +190,5 @@ export async function enregistrerPaiement(formData: FormData) {
   await recalculerStatutPaiement(data.factureId);
 
   revalidatePath(`/factures/${data.factureId}`);
+  redirect(withToast(`/factures/${data.factureId}`, "Paiement enregistre avec succes."));
 }

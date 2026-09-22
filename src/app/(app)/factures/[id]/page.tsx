@@ -1,6 +1,9 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { ToastOnParam } from "@/components/ui/ToastOnParam";
 import { formatMontant, formatDate } from "@/lib/format";
 import { StatutBadge } from "@/components/StatutBadge";
 import { updateFactureStatut, enregistrerPaiement } from "@/lib/actions/factures";
@@ -34,6 +37,10 @@ export default async function FactureDetailPage({
 
   return (
     <div className="item-color space-y-6" style={styleCouleur("rose", facture.couleur, facture.id)}>
+      <Suspense fallback={null}>
+        <ToastOnParam />
+      </Suspense>
+      <Breadcrumbs lastLabel={facture.numero} />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 border-l-4 border-l-(--item-color) pl-4">
           <Pastille texte="F" forme="carre" taille="lg" />

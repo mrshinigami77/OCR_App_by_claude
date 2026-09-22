@@ -89,6 +89,21 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
+  /* Neutral palette matching shadcn/ui's default "slate" theme (shadcn-admin reference);
+     used by the enterprise UI (grids, toasts, shell). */
+  --color-brand-50: oklch(96.8% 0.007 247.896);
+  --color-brand-100: oklch(92.9% 0.013 255.508);
+  --color-brand-200: oklch(92.9% 0.013 255.508);
+  --color-brand-500: oklch(70.4% 0.04 256.788);
+  --color-brand-600: oklch(55.4% 0.046 257.417);
+  --color-brand-700: oklch(20.8% 0.042 265.755);
+  --color-brand-800: oklch(12.9% 0.042 264.695);
+
+  /* Neutral secondary accent (was orange; kept for existing usages, now muted gray). */
+  --color-accent-600: oklch(40% 0.05 257.417);
+
+  --radius-card: 0.875rem;
+
   --color-neutral-50: var(--n-50);
   --color-neutral-100: var(--n-100);
   --color-neutral-200: var(--n-200);
@@ -132,13 +147,19 @@ body {
   --item-color: var(--cg-light);
   --item-ink: var(--cg-ink-light);
 }
-:root[data-theme="dark"] .item-color {
-  --item-color: var(--cg-dark);
-  --item-ink: var(--cg-ink-dark);
+@media (prefers-color-scheme: dark) {
+  .item-color {
+    --item-color: var(--cg-dark);
+    --item-ink: var(--cg-ink-dark);
+  }
 }
 
 @layer components {
   .input {
-    @apply w-full rounded border border-neutral-300 bg-surface px-3 py-2 text-sm text-neutral-900 focus:border-brand focus:ring-2 focus:ring-brand/25 focus:outline-none;
+    @apply w-full rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30;
+  }
+
+  .input-lg {
+    @apply w-full rounded-md border border-neutral-200 bg-white px-4 py-2.5 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30;
   }
 }

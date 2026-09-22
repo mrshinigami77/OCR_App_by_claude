@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { signIn } from "@/auth";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default async function LoginPage({
   searchParams,
@@ -29,7 +28,6 @@ export default async function LoginPage({
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-linear-to-br from-brand-soft via-neutral-50 to-accent-soft px-6">
-      <ThemeToggle className="absolute top-4 right-4 bg-surface" />
       <div className="w-full max-w-sm overflow-hidden rounded-lg border border-neutral-200 bg-surface p-8 shadow-lg shadow-brand/10">
         <div className="-mx-8 -mt-8 mb-6 h-1.5 bg-linear-to-r from-brand via-accent to-pop" />
         <h1 className="mb-1 text-xl font-semibold text-neutral-900">Facturation</h1>

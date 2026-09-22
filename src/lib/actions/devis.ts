@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/current-user";
 import { devisSchema } from "@/lib/validations/document";
 import { calculerLigne, calculerTotaux } from "@/lib/calculs";
 import { nextDocumentNumber } from "@/lib/numbering";
+import { withToast } from "@/lib/toastRedirect";
 import { nouvelleCouleur } from "@/lib/couleurs-serveur";
 
 function parseFormData(formData: FormData) {
@@ -68,7 +69,55 @@ export async function createDevis(formData: FormData) {
   });
 
   revalidatePath("/devis");
-  redirect(`/devis/${devis.id}`);
+  redirect(withToast(`/devis/${devis.id}`, "Devis cree avec succes."));
+}
+
+export async function duplicateDevis(id: string) {
+  const user = await requireUser();
+
+  const source = await prisma.devis.findUniqueOrThrow({
+    where: { id },
+    include: { lignes: true },
+  });
+
+  const annee = new Date().getFullYear();
+  const numero = await nextDocumentNumber("DEVIS", annee);
+
+  const copie = await prisma.$transaction(async (tx) => {
+    const couleur = await nouvelleCouleur(tx, "devis", numero);
+    return tx.devis.create({
+      data: {
+        couleur,
+        numero,
+        annee,
+        dateEmission: new Date(),
+        dateValidite: source.dateValidite,
+        conditions: source.conditions,
+        notes: source.notes,
+        clientId: source.clientId,
+        createdById: user.id,
+        sousTotalHT: source.sousTotalHT,
+        totalTva: source.totalTva,
+        totalTTC: source.totalTTC,
+        lignes: {
+          create: source.lignes.map((l) => ({
+            ordre: l.ordre,
+            designation: l.designation,
+            description: l.description,
+            quantite: l.quantite,
+            prixUnitaireHT: l.prixUnitaireHT,
+            remisePct: l.remisePct,
+            tauxTva: l.tauxTva,
+            totalHT: l.totalHT,
+            produitId: l.produitId,
+          })),
+        },
+      },
+    });
+  });
+
+  revalidatePath("/devis");
+  return { id: copie.id };
 }
 
 export async function updateDevisStatut(
@@ -142,5 +191,5 @@ export async function convertirDevisEnFacture(devisId: string) {
 
   revalidatePath("/devis");
   revalidatePath("/factures");
-  redirect(`/factures/${facture.id}`);
+  return { id: facture.id };
 }

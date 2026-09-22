@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/current-user";
 import { produitSchema } from "@/lib/validations/produit";
+import { withToast } from "@/lib/toastRedirect";
 import { lireCouleur, nouvelleCouleur } from "@/lib/couleurs-serveur";
 
 function parseFormData(formData: FormData) {
@@ -13,9 +14,11 @@ function parseFormData(formData: FormData) {
     designation: formData.get("designation"),
     description: formData.get("description"),
     type: formData.get("type"),
+    categorie: formData.get("categorie"),
     prixUnitaireHT: formData.get("prixUnitaireHT"),
     uniteMesure: formData.get("uniteMesure") || "unite",
     tauxTva: formData.get("tauxTva"),
+    stock: formData.get("stock"),
   };
 }
 
@@ -29,13 +32,15 @@ export async function createProduit(formData: FormData) {
       data: {
         ...data,
         reference: data.reference || null,
+        categorie: data.categorie || null,
+        stock: data.stock ?? null,
         couleur,
       },
     });
   });
 
   revalidatePath("/produits");
-  redirect("/produits");
+  redirect(withToast("/produits", "Produit cree avec succes."));
 }
 
 export async function updateProduit(id: string, formData: FormData) {
@@ -50,6 +55,8 @@ export async function updateProduit(id: string, formData: FormData) {
       data: {
         ...data,
         reference: data.reference || null,
+        categorie: data.categorie || null,
+        stock: data.stock ?? null,
         couleur,
       },
     });
@@ -57,11 +64,17 @@ export async function updateProduit(id: string, formData: FormData) {
 
   revalidatePath("/produits");
   revalidatePath(`/produits/${id}`);
-  redirect("/produits");
+  redirect(withToast("/produits", "Produit modifie avec succes."));
 }
 
 export async function deactivateProduit(id: string) {
   await requireUser();
   await prisma.produit.update({ where: { id }, data: { actif: false } });
+  revalidatePath("/produits");
+}
+
+export async function activateProduit(id: string) {
+  await requireUser();
+  await prisma.produit.update({ where: { id }, data: { actif: true } });
   revalidatePath("/produits");
 }

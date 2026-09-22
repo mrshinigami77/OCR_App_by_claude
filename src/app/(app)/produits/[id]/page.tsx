@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { ProduitForm } from "@/components/ProduitForm";
 import { CouleurPicker } from "@/components/CouleurPicker";
 import { Pastille } from "@/components/Pastille";
@@ -24,6 +25,8 @@ export default async function EditProduitPage({
 
   return (
     <div className="item-color space-y-6" style={styleCouleur("bleu", produit.couleur, produit.id)}>
+      <Breadcrumbs lastLabel={produit.designation} />
+
       <div className="flex items-center gap-4 border-l-4 border-l-(--item-color) pl-4">
         <Pastille texte={produit.designation} taille="lg" />
         <h1 className="text-2xl font-semibold text-neutral-900">{produit.designation}</h1>

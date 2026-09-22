@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -6,6 +7,10 @@ import { CouleurPicker } from "@/components/CouleurPicker";
 import { Pastille } from "@/components/Pastille";
 import { styleCouleur } from "@/lib/couleur";
 import { couleursDesAutres } from "@/lib/couleurs-serveur";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { ToastOnParam } from "@/components/ui/ToastOnParam";
+import { StatutBadge } from "@/components/StatutBadge";
+import { updateAvoirStatut } from "@/lib/actions/avoirs";
 
 export default async function AvoirDetailPage({
   params,
@@ -26,6 +31,10 @@ export default async function AvoirDetailPage({
 
   return (
     <div className="item-color space-y-6" style={styleCouleur("rouge", avoir.couleur, avoir.id)}>
+      <Suspense fallback={null}>
+        <ToastOnParam />
+      </Suspense>
+      <Breadcrumbs lastLabel={avoir.numero} />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 border-l-4 border-l-(--item-color) pl-4">
           <Pastille texte="A" forme="carre" taille="lg" />
@@ -39,13 +48,26 @@ export default async function AvoirDetailPage({
             </p>
           </div>
         </div>
-        <a
-          href={`/avoirs/${avoir.id}/pdf`}
-          target="_blank"
-          className="rounded border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
-        >
-          Voir le PDF
-        </a>
+        <div className="flex items-center gap-3">
+          <StatutBadge statut={avoir.statut} />
+          <a
+            href={`/avoirs/${avoir.id}/pdf`}
+            target="_blank"
+            className="rounded border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
+          >
+            Voir le PDF
+          </a>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {avoir.statut === "EMIS" && (
+          <>
+            <AvoirStatusButton id={avoir.id} statut="APPLIQUE" label="Marquer comme applique" />
+            <AvoirStatusButton id={avoir.id} statut="REMBOURSE" label="Marquer comme rembourse" />
+            <AvoirStatusButton id={avoir.id} statut="ANNULE" label="Annuler" />
+          </>
+        )}
       </div>
 
       <div className="max-w-xl">
@@ -101,5 +123,31 @@ export default async function AvoirDetailPage({
 
       <p className="text-xs text-neutral-400">Emis le {formatDate(avoir.dateEmission)}</p>
     </div>
+  );
+}
+
+function AvoirStatusButton({
+  id,
+  statut,
+  label,
+}: {
+  id: string;
+  statut: "APPLIQUE" | "REMBOURSE" | "ANNULE";
+  label: string;
+}) {
+  return (
+    <form
+      action={async () => {
+        "use server";
+        await updateAvoirStatut(id, statut);
+      }}
+    >
+      <button
+        type="submit"
+        className="rounded border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
+      >
+        {label}
+      </button>
+    </form>
   );
 }

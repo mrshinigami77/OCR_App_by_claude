@@ -1,6 +1,9 @@
-import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { ToastOnParam } from "@/components/ui/ToastOnParam";
 import { formatMontant, formatDate } from "@/lib/format";
 import { StatutBadge } from "@/components/StatutBadge";
 import { updateDevisStatut, convertirDevisEnFacture } from "@/lib/actions/devis";
@@ -28,6 +31,10 @@ export default async function DevisDetailPage({
 
   return (
     <div className="item-color space-y-6" style={styleCouleur("gris", devis.couleur, devis.id)}>
+      <Suspense fallback={null}>
+        <ToastOnParam />
+      </Suspense>
+      <Breadcrumbs lastLabel={devis.numero} />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 border-l-4 border-l-(--item-color) pl-4">
           <Pastille texte="D" forme="carre" taille="lg" />
@@ -62,7 +69,8 @@ export default async function DevisDetailPage({
           <form
             action={async () => {
               "use server";
-              await convertirDevisEnFacture(devis.id);
+              const { id } = await convertirDevisEnFacture(devis.id);
+              redirect(`/factures/${id}`);
             }}
           >
             <button
